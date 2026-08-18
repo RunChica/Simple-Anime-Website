@@ -1,58 +1,79 @@
-// Alias Matter.js modules for easier coding
+// Alias Matter.js modules
 const { Engine, Render, Runner, Bodies, Composite, Mouse, MouseConstraint } = Matter;
 
-// Setup Physics Engine & Renderer
 const container = document.getElementById('physics-container');
+
+// Helper to get accurate full screen size on all mobile/desktop devices
+function getScreenSize() {
+  return {
+    width: Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0),
+    height: Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0)
+  };
+}
+
+let screenSize = getScreenSize();
+
+// Setup Physics Engine
 const engine = Engine.create();
 
+// Setup Renderer
 const render = Render.create({
   element: container,
   engine: engine,
   options: {
-    width: window.innerWidth,
-    height: window.innerHeight,
-    wireframes: false, // Set false to show full images instead of outline shapes
-    background: 'transparent'
+    width: screenSize.width,
+    height: screenSize.height,
+    wireframes: false,
+    background: 'transparent',
+    pixelRatio: window.devicePixelRatio || 1 // Sharp rendering on mobile retina displays
   }
 });
 
 Render.run(render);
 Runner.run(Runner.create(), engine);
 
-// Add Mouse Control to enable dragging plushies
+// Add Mouse/Touch Control to enable dragging plushies
 const mouse = Mouse.create(render.canvas);
 const mouseConstraint = MouseConstraint.create(engine, {
   mouse: mouse,
   constraint: {
-    stiffness: 0.2, // Controls how "tight" the drag feels
-    render: {
-      visible: false // Hides the constraint line while dragging
-    }
+    stiffness: 0.2,
+    render: { visible: false }
   }
 });
 
 Composite.add(engine.world, mouseConstraint);
-
-// Keep mouse scroll/drag coordinates aligned with rendering
 render.mouse = mouse;
 
-// Create Ground Floor at the bottom for items to land on
+// Ground Floor Setup
+const groundThickness = 100;
 const ground = Bodies.rectangle(
-  window.innerWidth / 2, 
-  window.innerHeight + 30, 
-  window.innerWidth * 2, 
-  100, 
+  screenSize.width / 2,
+  screenSize.height + (groundThickness / 2),
+  screenSize.width * 2,
+  groundThickness,
   { isStatic: true }
 );
 Composite.add(engine.world, ground);
 
-// Adjust renderer & ground dynamically if user resizes browser window
+// Adjust canvas, bounds & ground dynamically on screen resize/orientation change
 window.addEventListener('resize', () => {
-  render.canvas.width = window.innerWidth;
-  render.canvas.height = window.innerHeight;
+  screenSize = getScreenSize();
+  
+  // Update canvas size
+  render.canvas.width = screenSize.width;
+  render.canvas.height = screenSize.height;
+  
+  // Update render bounds
+  render.bounds.max.x = screenSize.width;
+  render.bounds.max.y = screenSize.height;
+  render.options.width = screenSize.width;
+  render.options.height = screenSize.height;
+
+  // Reposition ground relative to new screen height
   Matter.Body.setPosition(ground, {
-    x: window.innerWidth + 100,
-    y: window.innerHeight + 100
+    x: screenSize.width / 2,
+    y: screenSize.height + (groundThickness / 2)
   });
 });
 
@@ -60,96 +81,72 @@ window.addEventListener('resize', () => {
 const bgm = document.getElementById('bgm');
 let isBgmStarted = false;
 
-// Function to start looping BGM on first user click anywhere
 function startBgm() {
   if (!isBgmStarted && bgm) {
-    bgm.volume = 0.3; // Sets comfortable background volume (30%)
+    bgm.volume = 0.3;
     bgm.play().catch(err => console.log('BGM playback waiting:', err));
     isBgmStarted = true;
   }
 }
 
-// Attach BGM trigger to the very first click on the page
-window.addEventListener('click', startBgm, { once: true });
+// Triggers BGM on first interaction (click or mobile tap)
+window.addEventListener('pointerdown', startBgm, { once: true });
 
 // --- State Management & Character Pool ---
 let isSpawningActive = false;
 const toggleBtn = document.getElementById('toggle-btn');
 
-// Character List with 90% / 5% / 5% weighted chances
 const CHARACTERS = [
-  {
-    name: 'Aston Machan',
-    url: 'AMplushie.png', // Main image (90%)
-    soundId: 'sound-aston',
-    chance: 0.90
-  },
-  {
-    name: 'Daiwa Scarlet',
-    url: 'DSplushie.png', // Rare image #1 (5%)
-    soundId: 'sound-daiwa',
-    chance: 0.05
-  },
-  {
-    name: 'Vodka',
-    url: 'Vplushie.png', // Rare image #2 (5%)
-    soundId: 'sound-vodka',
-    chance: 0.05
-  }
+  { name: 'Aston Machan', url: 'AMplushie.png', soundId: 'sound-aston', chance: 0.90 },
+  { name: 'Daiwa Scarlet', url: 'DSplushie.png', soundId: 'sound-daiwa', chance: 0.05 },
+  { name: 'Vodka', url: 'Vplushie.png', soundId: 'sound-vodka', chance: 0.05 }
 ];
 
-// Sound Player Function
 function playCharacterSound(soundId) {
   const audio = document.getElementById(soundId);
   if (audio) {
-    audio.currentTime = 0; // Rewind to start for rapid clicking
+    audio.currentTime = 0;
     audio.play().catch(err => console.log('Audio playback waiting:', err));
   }
 }
 
-// Helper function to select character based on probability
 function getRandomCharacter() {
-  const roll = Math.random(); // Generates a number between 0.00 and 1.00
-
-  if (roll < 0.05) {
-    // 5% Chance (0.00 to 0.049) -> Daiwa Scarlet
-    return CHARACTERS[1]; 
-  } else if (roll < 0.10) {
-    // 5% Chance (0.05 to 0.099) -> Vodka
-    return CHARACTERS[2];
-  } else {
-    // 90% Chance (0.10 to 0.999) -> Aston Machan
-    return CHARACTERS[0]; 
-  }
+  const roll = Math.random();
+  if (roll < 0.05) return CHARACTERS[1];
+  if (roll < 0.10) return CHARACTERS[2];
+  return CHARACTERS[0];
 }
 
-// Toggle Mode ON / OFF on Button Click
-toggleBtn.addEventListener('click', (e) => {
-  e.stopPropagation(); // Prevents button click from spawning an image instantly
-  isSpawningActive = !isSpawningActive;
+// Toggle Spawning Mode
+if (toggleBtn) {
+  toggleBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    isSpawningActive = !isSpawningActive;
 
-  if (isSpawningActive) {
-    toggleBtn.textContent = 'Stop Spawning';
-    toggleBtn.style.backgroundColor = '#2ec1ac'; // Change color to indicate ACTIVE
-    container.classList.add('active');
-  } else {
-    toggleBtn.textContent = 'Start Spawning';
-    toggleBtn.style.backgroundColor = ''; // Reset button color
-    container.classList.remove('active');
-  }
-});
+    if (isSpawningActive) {
+      toggleBtn.textContent = 'Stop Spawning';
+      toggleBtn.style.backgroundColor = '#2ec1ac';
+      container.classList.add('active');
+    } else {
+      toggleBtn.textContent = 'Start Spawning';
+      toggleBtn.style.backgroundColor = '';
+      container.classList.remove('active');
+    }
+  });
+}
 
-// Click Anywhere to Spawn Image with Physics & Sound
-window.addEventListener('click', (e) => {
+// Spawn Plushie on Pointer Click / Tap Anywhere
+window.addEventListener('pointerdown', (e) => {
   if (!isSpawningActive) return;
 
-  // Prevent spawning a new plushie while holding/dragging an existing one
+  // Prevent spawning if user clicked an interactive button/overlay
+  if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
+
+  // Prevent spawning a new plushie while grabbing/dragging an existing one
   if (mouseConstraint.body) return;
 
-  // 1. Pick character based on probability
   const chosenCharacter = getRandomCharacter();
 
-  // 2. Spawn using the chosen character's image URL
   const spawnedItem = Bodies.circle(e.clientX, e.clientY, 30, {
     restitution: 0.6,
     friction: 0.5,
@@ -163,25 +160,17 @@ window.addEventListener('click', (e) => {
   });
 
   Composite.add(engine.world, spawnedItem);
-
-  // 3. Play the matching sound effect
   playCharacterSound(chosenCharacter.soundId);
 });
 
-// Clear Button Functionality (Silent)
+// Clear Button Functionality
 const clearBtn = document.getElementById('clear-btn');
-
 if (clearBtn) {
   clearBtn.addEventListener('click', (e) => {
-    e.stopPropagation(); // Prevents spawning an item when clicking the button
-
-    // Get all physics bodies currently in the world
+    e.stopPropagation();
     const allBodies = Composite.allBodies(engine.world);
-
-    // Filter out ground and constraint objects so we only delete spawned plushies
     const itemsToRemove = allBodies.filter(body => body !== ground);
 
-    // Remove each item from the physics world
     itemsToRemove.forEach(item => {
       Composite.remove(engine.world, item);
     });
@@ -195,23 +184,19 @@ const jumpscareSound = document.getElementById('jumpscare-sound');
 
 if (jumpscareBtn) {
   jumpscareBtn.addEventListener('click', (e) => {
-    e.stopPropagation(); // Stops the physics spawner from triggering
+    e.stopPropagation();
 
-    // 1. Play loud scream sound
     if (jumpscareSound) {
       jumpscareSound.currentTime = 0;
-      jumpscareSound.volume = 1.0; // Maximum volume
+      jumpscareSound.volume = 1.0;
       jumpscareSound.play().catch(err => console.log('Audio playback waiting:', err));
     }
 
-    // 2. Show the full-screen image
     if (jumpscareOverlay) {
       jumpscareOverlay.classList.add('active');
-
-      // 3. Hide the jumpscare after 10 seconds (10000ms)
       setTimeout(() => {
         jumpscareOverlay.classList.remove('active');
       }, 10000);
     }
   });
-}
+    }
