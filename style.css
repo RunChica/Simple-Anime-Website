@@ -1,0 +1,105 @@
+/* Page Base & Typography */
+body {
+  position: relative;
+  margin: 0;
+  padding: 40px;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden; /* Keeps the background from creating scrollbars */
+}
+
+/* Background Image Layer */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  
+  background-image: url('TracenBG.jpg');
+  background-size: cover;       /* Stretches image to cover whole screen */
+  background-position: center;  /* Centers the image */
+  background-repeat: no-repeat;
+  
+  opacity: 0.3;                 /* 0.0 (invisible) to 1.0 (solid) */
+  z-index: -1;                  /* Puts layer behind text and buttons */
+}
+
+/* Layout Container for Control Buttons */
+.button-container {
+  position: relative;
+  z-index: 20;                  /* Keeps buttons above physics canvas */
+  display: flex;
+  gap: 15px;                    /* Creates spacing between buttons */
+  flex-wrap: wrap;              /* Wraps on smaller screens */
+  margin-top: 20px;
+}
+
+/* Base Button Styling */
+.btn {
+  padding: 10px 20px;
+  font-size: 15px;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  font-weight: bold;
+  color: black;
+  border: none;
+  border-radius: 10px;          /* Slightly rounded corners */
+  cursor: pointer;              /* Pointer cursor on hover */
+  transition: transform 0.1s ease, opacity 0.2s ease;
+}
+
+/* Hover & Active Press Feedback */
+.btn:hover {
+  opacity: 0.9;
+}
+
+.btn:active {
+  transform: scale(0.95);
+}
+
+/* Individual Button Accent Colors */
+.btn-red { background-color: #e74c3c; }
+.btn-blue { background-color: #3498db; }
+.btn-green { background-color: #2ecc71; }
+.btn-purple { background-color: #9b59b6; }
+
+/* Full-Screen Physics Canvas Layer */
+#physics-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 10;                  /* Sits above background layer */
+  pointer-events: none;          /* Keeps canvas transparent to clicks when inactive */
+}
+
+/* Active State When Spawning Is Turned ON */
+#physics-container.active {
+  pointer-events: auto;          /* Captures clicks across entire viewport */
+}
+
+/* Fullscreen Jumpscare Overlay */
+#jumpscare-overlay {
+  display: none;                 /* Keeps overlay hidden by default */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: black;
+  z-index: 9999;                 /* Placed above all UI elements */
+}
+
+#jumpscare-overlay.active {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#jumpscare-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;             /* Stretches meme image to cover entire screen */
+}
