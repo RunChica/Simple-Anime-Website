@@ -3,7 +3,7 @@ const { Engine, Render, Runner, Bodies, Composite, Mouse, MouseConstraint } = Ma
 
 const container = document.getElementById('physics-container');
 
-// Helper to get accurate full screen size on all mobile/desktop devices
+// Cross-platform helper for viewport dimensions
 function getScreenSize() {
   return {
     width: Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0),
@@ -13,10 +13,9 @@ function getScreenSize() {
 
 let screenSize = getScreenSize();
 
-// Setup Physics Engine
+// Setup Physics Engine & Renderer
 const engine = Engine.create();
 
-// Setup Renderer
 const render = Render.create({
   element: container,
   engine: engine,
@@ -25,14 +24,14 @@ const render = Render.create({
     height: screenSize.height,
     wireframes: false,
     background: 'transparent',
-    pixelRatio: window.devicePixelRatio || 1 // Sharp rendering on mobile retina displays
+    pixelRatio: window.devicePixelRatio || 1
   }
 });
 
 Render.run(render);
 Runner.run(Runner.create(), engine);
 
-// Add Mouse/Touch Control to enable dragging plushies
+// Mouse & Touch Controls
 const mouse = Mouse.create(render.canvas);
 const mouseConstraint = MouseConstraint.create(engine, {
   mouse: mouse,
@@ -45,7 +44,7 @@ const mouseConstraint = MouseConstraint.create(engine, {
 Composite.add(engine.world, mouseConstraint);
 render.mouse = mouse;
 
-// Ground Floor Setup
+// Create Floor Ground
 const groundThickness = 100;
 const ground = Bodies.rectangle(
   screenSize.width / 2,
@@ -56,28 +55,26 @@ const ground = Bodies.rectangle(
 );
 Composite.add(engine.world, ground);
 
-// Adjust canvas, bounds & ground dynamically on screen resize/orientation change
+// Window Resize Handling
 window.addEventListener('resize', () => {
   screenSize = getScreenSize();
-  
-  // Update canvas size
+
   render.canvas.width = screenSize.width;
   render.canvas.height = screenSize.height;
   
-  // Update render bounds
   render.bounds.max.x = screenSize.width;
   render.bounds.max.y = screenSize.height;
   render.options.width = screenSize.width;
   render.options.height = screenSize.height;
 
-  // Reposition ground relative to new screen height
+  // Reposition ground floor to match new viewport height
   Matter.Body.setPosition(ground, {
     x: screenSize.width / 2,
     y: screenSize.height + (groundThickness / 2)
   });
 });
 
-// --- Background Music Setup ---
+// --- BGM Playback ---
 const bgm = document.getElementById('bgm');
 let isBgmStarted = false;
 
@@ -89,10 +86,10 @@ function startBgm() {
   }
 }
 
-// Triggers BGM on first interaction (click or mobile tap)
+// First interaction listener (mouse click or mobile tap)
 window.addEventListener('pointerdown', startBgm, { once: true });
 
-// --- State Management & Character Pool ---
+// --- State & Characters ---
 let isSpawningActive = false;
 const toggleBtn = document.getElementById('toggle-btn');
 
@@ -117,7 +114,7 @@ function getRandomCharacter() {
   return CHARACTERS[0];
 }
 
-// Toggle Spawning Mode
+// Toggle Spawning
 if (toggleBtn) {
   toggleBtn.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -128,21 +125,21 @@ if (toggleBtn) {
       toggleBtn.style.backgroundColor = '#2ec1ac';
       container.classList.add('active');
     } else {
-      toggleBtn.textContent = 'Start Spawning';
+      toggleBtn.textContent = 'Spawn Machans';
       toggleBtn.style.backgroundColor = '';
       container.classList.remove('active');
     }
   });
 }
 
-// Spawn Plushie on Pointer Click / Tap Anywhere
+// Pointer Event for Spawning (Handles Mobile Taps & Desktop Clicks)
 window.addEventListener('pointerdown', (e) => {
   if (!isSpawningActive) return;
 
-  // Prevent spawning if user clicked an interactive button/overlay
+  // Do not spawn if clicking on buttons or interactive UI elements
   if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
 
-  // Prevent spawning a new plushie while grabbing/dragging an existing one
+  // Do not spawn while dragging an existing plushie
   if (mouseConstraint.body) return;
 
   const chosenCharacter = getRandomCharacter();
@@ -163,7 +160,7 @@ window.addEventListener('pointerdown', (e) => {
   playCharacterSound(chosenCharacter.soundId);
 });
 
-// Clear Button Functionality
+// Clear Button
 const clearBtn = document.getElementById('clear-btn');
 if (clearBtn) {
   clearBtn.addEventListener('click', (e) => {
@@ -177,7 +174,7 @@ if (clearBtn) {
   });
 }
 
-// Jumpscare Functionality
+// Jumpscare Button
 const jumpscareBtn = document.getElementById('jumpscare-btn');
 const jumpscareOverlay = document.getElementById('jumpscare-overlay');
 const jumpscareSound = document.getElementById('jumpscare-sound');
@@ -199,4 +196,4 @@ if (jumpscareBtn) {
       }, 10000);
     }
   });
-    }
+                 }
