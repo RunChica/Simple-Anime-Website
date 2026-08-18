@@ -5,40 +5,39 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Aston Machan Project</title>
   <link rel="icon" type="image/png" href="AMplushie.png">
-  <!-- Link to external stylesheet -->
   <link rel="stylesheet" href="style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
 </head>
 <body>
 
-  <header>
-    <h1>Welcome to Aston Machan Website</h1>
-  </header>
-
-  <main>
-  <h2> </h2>
+  <!-- UI Overlay Header -->
+  <header class="ui-header">
+    <h1 class="page-title">Welcome to Aston Machan Website</h1>
+    
     <div class="button-container">
       <button id="toggle-btn" class="btn btn-red">Spawn Machans</button>
       <button id="clear-btn" class="btn btn-blue">Delete All Machans</button>
-      <button id= 'jumpscare-btn' class="btn btn-green">Machan Jumpscare</button>
+      <button id="jumpscare-btn" class="btn btn-green">Machan Jumpscare</button>
       <button class="btn btn-purple">-</button>
     </div>
-  </main>
+  </header>
 
+  <!-- Fullscreen Physics Canvas -->
   <div id="physics-container"></div>
 
-  <!-- Link to external script -->
-  
+  <!-- Audio Assets -->
   <audio id="sound-aston" src="AstonMachan.mp3" preload="auto"></audio>
   <audio id="sound-daiwa" src="DaiwaScarlet.mp3" preload="auto"></audio>
   <audio id="sound-vodka" src="Vodka.mp3" preload="auto"></audio>
+  <audio id="bgm" src="BGM.mp3" loop preload="auto"></audio>
 
+  <!-- Jumpscare Overlay -->
   <div id="jumpscare-overlay">
     <img id="jumpscare-img" src="Meme.png" alt="Jumpscare">
   </div>
   <audio id="jumpscare-sound" src="Meme.mp3" preload="auto"></audio>
-  
-  <script src="script.js"></script>
 
+  <script src="script.js"></script>
 </body>
-</html>
+    </html>
+    
