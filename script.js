@@ -51,8 +51,8 @@ window.addEventListener('resize', () => {
   render.canvas.width = window.innerWidth;
   render.canvas.height = window.innerHeight;
   Matter.Body.setPosition(ground, {
-    x: window.innerWidth / 2,
-    y: window.innerHeight + 30
+    x: window.innerWidth + 100,
+    y: window.innerHeight + 100
   });
 });
 
